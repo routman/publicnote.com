@@ -14,7 +14,7 @@
     <br>
     Do not use publicnote to store sensitive information.  By using publicnote you are agreeing to our <div class="link" @click="sot.title = 'terms'">terms</div>.<br>
     <br>
-    Publicnote is <a class="link" href="https://github.com/routman/publicnote" target="_blank" rel="noopener">open source </a> and offered as a free service without any ads. Your donations help fund operating costs and are greatly appreciated. 🙏<br>
+    Publicnote is <a class="link" href="https://github.com/routman/publicnote.com" target="_blank" rel="noopener">open source </a> and offered as a free service without any ads. Your donations help fund operating costs and are greatly appreciated. 🙏<br>
     <br>
     Bitcoin:
     <p class="addr">bc1q7fqwmtq2vaka8wwpjpnmlehe36qrgfmlw33vh9</p>

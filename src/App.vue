@@ -7,7 +7,6 @@
     <home class="page" v-if="sot.title == ''"/>
     <terms class="page" v-else-if="sot.title == 'terms'"/>
     <suicide class="page" v-else-if="sot.title.toLowerCase() == 'suicide'"/>
-    <israel class="page" v-else-if="sot.title.toLowerCase() == 'israel'"/>
     <about class="page" v-else-if="sot.title == 'about'"/>
     <textarea placeholder="type note here" v-else v-model="sot.note" v-on:keyup="save()" v-bind:class="{blur: sot.loading}" :disabled="sot.loading == true"/>
   </div>
@@ -17,14 +16,13 @@
 import home   from './components/home.vue'
 import terms  from './components/terms.vue'
 import suicide from './components/suicide.vue'
-import israel from './components/israel.vue'
 import about from './components/about.vue'
 import status from './components/status.vue'
 
 export default {
   name: 'app',
   components: {
-    home, terms, suicide, israel, about, status
+    home, terms, suicide, about, status
   },
   data: function() {
     return {
@@ -36,7 +34,7 @@ export default {
     get: function() {
       clearTimeout(this.sot.autoload);
       clearTimeout(this.sot.autosave);
-      if (this.sot.title != '' && this.sot.title != 'terms' && this.sot.title != 'contact' && this.sot.title.toLowerCase() != 'suicide' && this.sot.title.toLowerCase() != 'israel') {
+      if (this.sot.title != '' && this.sot.title != 'terms' && this.sot.title != 'contact' && this.sot.title.toLowerCase() != 'suicide') {
         this.sot.get(this.sot.title);
       }
       else {
