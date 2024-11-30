@@ -27,7 +27,7 @@ export default {
 	display: inline-block;
   border: 2px solid;
   border-color: $color-inactive;
-  border-top: 2px solid $color-bg;
+  border-top: 2px solid var(--color-bg);
   border-radius: 50%;
   width: 15px;
   height: 15px;
@@ -46,7 +46,7 @@ export default {
   width: 8px;
   height: 16px;
   border: solid;
-  border-color: $color-primary;
+  border-color: var(--color-primary);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
   margin-top: 10px;
@@ -54,7 +54,7 @@ export default {
 }
 
 .refresh.icon {
-  color: $color-primary;
+  color: var(--color-primary);
   position: absolute;
   margin-left: -19px;
   margin-top: 13px;

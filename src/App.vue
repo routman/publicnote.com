@@ -1,8 +1,9 @@
 <template>
   <div id="app">
-    <input v-bind:type="[hidden ? 'password' : 'text']"  v-model="sot.title" placeholder="title" v-on:keyup="get()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+    <input ref="title" v-bind:type="[hidden ? 'password' : 'text']"  v-model="sot.title" placeholder="title" v-on:keyup="get()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
     <div class="eye icon" v-show="!hidden" @click="hide()"></div>
     <div class="closedeye icon" v-show="hidden" @click="show()"></div>
+    <div class="sun icon" @click="dark()"></div>
     <status id="status"/>
     <home class="page" v-if="sot.title == ''"/>
     <terms class="page" v-else-if="sot.title == 'terms'"/>
@@ -27,7 +28,8 @@ export default {
   data: function() {
     return {
       sot: this.$root.$data,
-      hidden: true
+      hidden: true,
+      darkmode: true
     }
   },
   methods: {
@@ -51,7 +53,20 @@ export default {
     },
     hide: function() {
       this.hidden = true;
+    },
+    dark: function() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme); 
     }
+  },
+  mounted () {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme); // Apply saved theme
+    }
+    this.$nextTick(() => this.$refs.title.focus());
   }
 }
 </script>
@@ -61,10 +76,12 @@ export default {
 
 html, body {
   font-family: $font;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
   font-size: 18px;
-  font-weight: 500;
-  color: $color-text;
-  background: $color-bg;
+  color: var(--color-text);
+  background: var(--color-bg);
   margin: 0;
   width: 100%;
   height: 100%;
@@ -75,6 +92,26 @@ input::selection {
 }
 textarea::selection {
   background: $color-selection;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: $color-inactive;
+  border-radius: 6px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+  border: 0;
+}
+::-webkit-resizer {
+  display: none;
+}
+::-webkit-scrollbar-corner {
+  display: none;
 }
 
 #app {
@@ -88,35 +125,32 @@ textarea::selection {
 
 .page {
   flex-grow: 1;
-  margin: $app-margin;
+  padding: $app-margin;
   overflow-y: scroll;
   -ms-overflow-style: none;
-  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-}
-.page::-webkit-scrollbar {
-  display: none;
+  resize: none;
 }
 
 #status {
   position: absolute;
-  top: $app-margin + 4px;
-  right: $app-margin + 40px;
+  top: $app-margin + 7px;
+  right: $app-margin + 75px;
   user-select: none;
   cursor: pointer;
 }
 
 .blur {
   filter:blur(2px);
-  background: $color-bg;
+  background: var(--color-bg);
 }
 
 input, textarea {
   display: block;
   font-family: $font;
-  color: $color-text;
-  caret-color: $color-primary;
-  background: $color-bg;
+  color: var(--color-text);
+  caret-color: var(--color-primary);
+  background: var(--color-bg);
   font-size: 18px;
   border: none;
   border-radius: 0;
@@ -131,19 +165,19 @@ input {
   flex-grow: 0;
   line-height: 40px;
   width: calc(100% - 32px);
-  border-bottom: 1px solid $color-primary;
+  border-bottom: 1px solid var(--color-primary);
   border-width: 0 0 1px 0 ;
-  border-image: linear-gradient(to right, $color-primary 0%, $color-accent 100%);
+  border-image: linear-gradient(to right, var(--color-primary) 0%, var(--color-accent) 100%);
   border-image-slice: 1;
   margin: $app-margin;
-  padding: 0;
+  padding: 0 110px 0 0;
   margin-top: $app-margin + 8px;
   margin-bottom: 8px;
 }
 input:focus {
   border-bottom: 1px solid $color-accent;
   border-width: 0 0 1px 0 ;
-  border-image: linear-gradient(to right, $color-accent 0%, $color-primary 100%);
+  border-image: linear-gradient(to right, var(--color-accent) 0%, var(--color-primary) 100%);
   border-image-slice: 1;
 }
 ::placeholder { 
@@ -156,17 +190,14 @@ textarea {
   line-height: 20px;
   overflow-y: scroll;
   -ms-overflow-style: none;
-  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-}
-textarea::-webkit-scrollbar {
-  display: none;
+  resize: none;
 }
 
 .link {
   display: inline-block;
   cursor: pointer;
-  color: $color-primary;
+  color: var(--color-link);
 }
 .nav {
   margin-right: 40px;
@@ -183,9 +214,9 @@ a {
 
 .eye.icon {
   cursor: pointer;
-  color: $color-primary;
+  color: var(--color-primary);
   position: absolute;
-  top: 32px;
+  top: 35px;
   right: 20px;
   width: 16px;
   height: 16px;
@@ -202,14 +233,14 @@ a {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  border: solid 2px $color-primary;
+  border: solid 2px var(--color-primary);
 }
 
 .closedeye.icon {
   cursor: pointer;
-  color: $color-primary;
+  color: var(--color-primary);
   position: absolute;
-  top: 32px;
+  top: 35px;
   right: 20px;
   width: 16px;
   height: 16px;
@@ -226,7 +257,7 @@ a {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  border: solid 2px $color-primary;
+  border: solid 2px var(--color-primary);
 }
 .closedeye.icon:after {
   content: '';
@@ -236,9 +267,21 @@ a {
   width: 24px;
   border: solid 2px currentColor;
   border-width: 2px 0 0 0;
-  box-shadow: 0px 2px $color-accent;
+  box-shadow: 0px 2px var(--color-accent);
   -webkit-transform: rotate(90deg);
           transform: rotate(90deg);
 }
-
+.sun.icon {
+  cursor: pointer;
+  color: var(--color-primary);
+  position: absolute;
+  top: 36px;
+  right: $app-margin + 41px;
+  width: 7px;
+  height: 14px;
+  border-radius: 50%;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 2px 9px 2px 2px;
+}
 </style>

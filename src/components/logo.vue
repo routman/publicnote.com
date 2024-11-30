@@ -20,7 +20,7 @@ export default {
 }
 
 .accent {
-  color: $color-primary;
+  color: var(--color-link);
   margin-right: 4px;
 }
 </style>
