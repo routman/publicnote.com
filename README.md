@@ -19,3 +19,39 @@ Notes stored on publicnote can be public or private, depending on the complexity
 Using common words as the title is for entertainment purposes only. You will find a variety of messages left by others. If you find something you find offensive, just delete it.
 
 Do not use publicnote to store sensitive information.
+
+## Development
+
+The frontend is a vanilla JavaScript app built with Vite. A mock backend implementing the get2/save2 API is included for local development.
+
+```
+npm install
+```
+
+Run the dev server and the mock backend in two terminals:
+
+```
+npm run dev       # vite dev server on http://localhost:5173
+npm run backend   # mock API on http://localhost:3001
+```
+
+The dev server proxies `/api` to the mock backend. If port 3001 is already in use, pick a free port and point the proxy at it:
+
+```
+PORT=3101 npm run backend
+PUBLICNOTE_API=http://localhost:3101 npm run dev
+```
+
+Pass a file path to `npm run backend -- --persist backend/notes.json` to keep notes across restarts.
+
+Run the crypto regression tests (SHA-256 vectors, AES-256-CBC round trips, and an independent decryption of the legacy fixture):
+
+```
+npm test
+```
+
+Produce a production build in `dist/`:
+
+```
+npm run build
+```

@@ -1,0 +1,10 @@
+node_modules
+dist
+*.local
+backend/notes.json
+AGENTS.md
+.opencode/
+CLAUDE.md
+.claude/
+PHASES.md
+docs/api.md

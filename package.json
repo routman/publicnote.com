@@ -1,31 +1,20 @@
 {
   "name": "publicnote",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "backend": "node backend/server.js",
+    "test": "node scripts/cryptovectors.mjs"
   },
   "dependencies": {
-    "crypto-js": "^3.1.9-1",
-    "vue": "^2.6.6",
-    "vue-analytics": "^5.16.4"
+    "crypto-js": "3.1.9-1"
   },
   "devDependencies": {
-    "@vue/cli-service": "^5.0.8",
-    "fibers": "^3.1.1",
-    "sass": "^1.62.1",
-    "sass-loader": "^7.1.0",
-    "vue-template-compiler": "^2.5.21"
-  },
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+    "express": "^5.2.1",
+    "vite": "^6.4.3"
+  }
 }
