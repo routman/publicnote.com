@@ -11,6 +11,9 @@ Environment=HOME=/opt/publicnote
 Environment=PORT=3001
 Environment=HOST=127.0.0.1
 Environment=DB_PATH=/opt/publicnote/notes.db
+Environment=LIMITS_FILE=/opt/publicnote/limits.json
+# PoW enforcement is on by default; add `Environment=POW_ENFORCE=0` for a
+# cutover/rollback window (unproven saves accepted but proof ignored).
 ExecStart=/usr/bin/node /opt/publicnote/server.js
 Restart=on-failure
 RestartSec=2

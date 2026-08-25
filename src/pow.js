@@ -62,7 +62,9 @@ export function solvePowAsync(challenge, deadlineMs = 14000) {
         return;
       }
       settled = true;
-      worker.removeEventListener('message', onMessage);
+      if (worker !== null) {
+        worker.removeEventListener('message', onMessage);
+      }
       resolve(value);
     };
     const onMessage = function (event) {
@@ -75,9 +77,12 @@ export function solvePowAsync(challenge, deadlineMs = 14000) {
       }
       done(message.ok ? message.proof : null);
     };
-    worker.addEventListener('message', onMessage);
     try {
-      getWorker().postMessage({ nonce: challenge.nonce, k: challenge.k, id, deadline });
+      // Construct (or fetch) the worker BEFORE touching its event API: on the
+      // first call the module-level `worker` is still null.
+      const w = getWorker();
+      w.addEventListener('message', onMessage);
+      w.postMessage({ nonce: challenge.nonce, k: challenge.k, id, deadline });
     } catch (error) {
       workerBroken = true;
       done(null);
