@@ -26,7 +26,7 @@ function renderContent() {
 }
 
 function renderDot() {
-  els.newdot.style.display = state.serverAhead ? '' : 'none';
+  els.newdot.style.display = state.serverAhead ? 'block' : 'none';
 }
 
 function syncEditor() {
