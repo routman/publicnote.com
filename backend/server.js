@@ -10,7 +10,8 @@ import express from 'express';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { PowController, ChallengeStore } from './lib/pow.js';
-import { Limits, loadLimitsConfig, watchLimitsFile, clientIp } from './lib/limits.js';
+import { Limits, loadLimitsConfig, watchLimitsFile, clientIp, deepMerge } from './lib/limits.js';
+import { isAllowedAdminIp, adminSourceIp, noteIdOf, AuditRing, rewriteLimitsFile, freeDiskKb } from './lib/admin.js';
 
 // Build the express app. opts:
 //   enforcePow    - require a valid PoW proof on save2 (default true;
@@ -20,8 +21,12 @@ import { Limits, loadLimitsConfig, watchLimitsFile, clientIp } from './lib/limit
 //   notes         - seed map/object: id -> ct string (legacy { ct, ... }
 //                   snapshots are accepted too; extra fields are ignored)
 //   onWrite       - callback(notes) after each successful save (persist hook)
+//   trustProxy    - trust the rightmost X-Forwarded-For hop for the admin
+//                   gate (prod sets this via TRUST_PROXY behind Caddy)
+//   auditCap      - admin audit ring size (default 500)
 export function createApp(opts = {}) {
   const enforcePow = opts.enforcePow !== false;
+  const trustProxy = opts.trustProxy === true;
   const notes = new Map(); // id -> ct (string)
 
   if (opts.notes) {
@@ -41,12 +46,32 @@ export function createApp(opts = {}) {
   const pow = new PowController(limits.cfg.pow);
   const challenges = new ChallengeStore(pow);
 
+  const globalWrites = []; // accepted-write timestamps (60 s stat window)
+  const audit = new AuditRing(opts.auditCap || 500);
+
   const sweeper = setInterval(function () {
     challenges.sweep();
     limits.sweep();
+    const cutoff = Date.now() - 60000;
+    while (globalWrites.length > 0 && globalWrites[0] < cutoff) {
+      globalWrites.shift();
+    }
   }, 60000);
   if (typeof sweeper.unref === 'function') {
     sweeper.unref();
+  }
+
+  // Persist the given patch into the limits config: rewrite the file (full
+  // normalized object, hot-reloaded by the mtime watcher) or, without a
+  // limitsFile, apply it in memory.
+  function applyLimitsPatch(patch) {
+    const merged = opts.limitsFile
+      ? rewriteLimitsFile(opts.limitsFile, patch)
+      : deepMerge(limits.cfg, patch);
+    // Keep the in-memory config in sync immediately (file rewrites are also
+    // picked up by the mtime watcher — that reload is idempotent).
+    limits.setConfig(merged);
+    return merged;
   }
 
   const app = express();
@@ -87,8 +112,17 @@ export function createApp(opts = {}) {
     if (typeof id !== 'string' || typeof ct !== 'string') {
       return res.status(400).json({ body: 'bad request' });
     }
-    const gate = limits.checkWrite(clientIp(req), id, now);
+    if (limits.cfg.readonly === true) {
+      return res.status(403).json({ body: 'read-only' });
+    }
+    const ip = clientIp(req);
+    if (Array.isArray(limits.cfg.blockedIps) && limits.cfg.blockedIps.includes(ip)) {
+      audit.record({ ip: ip, action: 'save-blocked', status: 429 });
+      return res.status(429).json({ body: 'blocked' });
+    }
+    const gate = limits.checkWrite(ip, id, now);
     if (!gate.ok) {
+      audit.record({ ip: ip, action: 'rate-limited', status: 429 });
       res.setHeader('Retry-After', String(Math.max(1, Math.ceil(gate.retryAfterMs / 1000))));
       return res.status(429).json({ body: 'rate limited' });
     }
@@ -105,15 +139,127 @@ export function createApp(opts = {}) {
       return res.status(413).json({ body: 'note too large' });
     }
     notes.set(id, ct);
-    limits.recordWrite(clientIp(req), id, now);
+    limits.recordWrite(ip, id, now);
     pow.observe(now);
+    globalWrites.push(now);
+    audit.record({ ip: ip, action: 'save', status: 200 });
     if (typeof opts.onWrite === 'function') {
       opts.onWrite(notes);
     }
     res.json({ body: 'successfully saved' });
   });
 
-  return { app, notes, limits, pow, challenges };
+  // --- admin / incident tooling (phase 6) ---
+  // CIDR-gated: loopback / RFC1918 / Tailscale ranges only. Behind Caddy with
+  // TRUST_PROXY the rightmost X-Forwarded-For hop is the real client.
+  function adminGate(req, res, next) {
+    const ip = adminSourceIp(req, trustProxy);
+    if (!isAllowedAdminIp(ip)) {
+      audit.record({ ip: ip, action: 'admin-denied', status: 403 });
+      return res.status(403).json({ body: 'forbidden' });
+    }
+    next();
+  }
+
+  const admin = express.Router();
+  admin.use(adminGate);
+
+  admin.post('/stats', function (req, res) {
+    const now = Date.now();
+    const writes60s = globalWrites.filter(function (t) {
+      return t >= now - 60000;
+    }).length;
+    res.json({
+      body: JSON.stringify({
+        notes: notes.size,
+        writes60s: writes60s,
+        powK: pow.kFor(),
+        readonly: limits.cfg.readonly === true,
+        blockedIps: Array.isArray(limits.cfg.blockedIps) ? limits.cfg.blockedIps : [],
+        freeDiskKb: freeDiskKb(process.cwd()),
+        uptimeS: Math.floor(process.uptime())
+      })
+    });
+  });
+
+  admin.post('/limits', function (req, res) {
+    res.json({ body: JSON.stringify(limits.cfg) });
+  });
+
+  admin.post('/set-limits', function (req, res) {
+    const patch = req.body;
+    if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      return res.status(400).json({ body: 'bad request' });
+    }
+    const cfg = applyLimitsPatch(patch);
+    const ip = adminSourceIp(req, trustProxy);
+    audit.record({ ip: ip, action: 'limits-set', detail: JSON.stringify(patch), status: 200 });
+    res.json({ body: JSON.stringify({ ok: true, cfg: cfg }) });
+  });
+
+  admin.post('/readonly', function (req, res) {
+    const patch = req.body || {};
+    if (typeof patch.on !== 'boolean') {
+      return res.status(400).json({ body: 'bad request' });
+    }
+    const ip = adminSourceIp(req, trustProxy);
+    applyLimitsPatch({ readonly: patch.on });
+    audit.record({ ip: ip, action: patch.on ? 'readonly-on' : 'readonly-off', status: 200 });
+    res.json({ body: JSON.stringify({ ok: true, readonly: patch.on }) });
+  });
+
+  admin.post('/block', function (req, res) {
+    const ip = adminSourceIp(req, trustProxy);
+    const target = (req.body || {}).ip;
+    if (typeof target !== 'string' || target.length === 0 || target.length > 64) {
+      return res.status(400).json({ body: 'bad request' });
+    }
+    const current = Array.isArray(limits.cfg.blockedIps) ? limits.cfg.blockedIps : [];
+    if (!current.includes(target)) {
+      applyLimitsPatch({ blockedIps: current.concat([target]) });
+    }
+    audit.record({ ip: ip, action: 'block', detail: target, status: 200 });
+    res.json({ body: JSON.stringify({ ok: true, blockedIps: limits.cfg.blockedIps || [] }) });
+  });
+
+  admin.post('/unblock', function (req, res) {
+    const ip = adminSourceIp(req, trustProxy);
+    const target = (req.body || {}).ip;
+    if (typeof target !== 'string' || target.length === 0) {
+      return res.status(400).json({ body: 'bad request' });
+    }
+    const current = Array.isArray(limits.cfg.blockedIps) ? limits.cfg.blockedIps : [];
+    applyLimitsPatch({ blockedIps: current.filter(function (entry) {
+      return entry !== target;
+    }) });
+    audit.record({ ip: ip, action: 'unblock', detail: target, status: 200 });
+    res.json({ body: JSON.stringify({ ok: true, blockedIps: limits.cfg.blockedIps || [] }) });
+  });
+
+  admin.post('/purge', function (req, res) {
+    const ip = adminSourceIp(req, trustProxy);
+    const title = (req.body || {}).title;
+    if (typeof title !== 'string' || title.length === 0) {
+      return res.status(400).json({ body: 'bad request' });
+    }
+    const noteId = noteIdOf(title);
+    const deleted = notes.delete(noteId);
+    audit.record({ ip: ip, action: 'purge', detail: title, status: deleted ? 200 : 404 });
+    res.json({ body: JSON.stringify({ deleted: deleted, id: noteId }) });
+  });
+
+  admin.post('/audit', function (req, res) {
+    const patch = req.body || {};
+    let n = 100;
+    if (typeof patch.n === 'number' && Number.isFinite(patch.n)) {
+      n = Math.max(1, Math.min(patch.n, 500));
+    }
+    res.json({ body: JSON.stringify(audit.tail(n)) });
+  });
+
+  app.use('/api/admin', admin);
+
+  return { app, notes, limits, pow, challenges, audit, globalWrites };
 }
 
 function argValue(flag) {
@@ -150,13 +296,17 @@ if (isDirectRun) {
     writeFileSync(persistFile, JSON.stringify(obj, null, 2));
   }
 
-  const { app } = createApp({ notes: seed, limitsFile, onWrite: persist });
+  const trustProxy = process.env.TRUST_PROXY === '1';
+  const { app } = createApp({ notes: seed, limitsFile, onWrite: persist, trustProxy });
 
   const port = process.env.PORT || 3001;
   app.listen(port, function () {
     console.log('publicnote mock backend on http://localhost:' + port);
     if (limitsFile) {
       console.log('limits from ' + limitsFile + ' (hot-reloaded on change)');
+    }
+    if (trustProxy) {
+      console.log('admin gate trusts X-Forwarded-For (TRUST_PROXY=1)');
     }
   });
 }

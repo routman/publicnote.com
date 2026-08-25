@@ -549,6 +549,44 @@
         <br>
         <div class="link" data-goto="">home</div><br><br>
       </div>
+      <div class="page admin" style="display: none">
+        <div>
+          <div class="logo accent">public</div>
+          <div class="logo">note&nbsp;</div>
+        </div>
+        <br>
+        <div id="admin-error"></div>
+        <h2>stats</h2>
+        <div class="adminrow">notes: <span id="admin-notes">-</span></div>
+        <div class="adminrow">writes/60s: <span id="admin-writes">-</span></div>
+        <div class="adminrow">pow k: <span id="admin-powk">-</span></div>
+        <div class="adminrow">readonly: <span id="admin-readonly">-</span></div>
+        <div class="adminrow">blocked: <span id="admin-blocked">-</span></div>
+        <div class="adminrow">disk free: <span id="admin-disk">-</span></div>
+        <div class="adminrow">uptime: <span id="admin-uptime">-</span></div>
+        <h2>controls</h2>
+        <div class="adminrow"><input id="admin-readonly-toggle" type="checkbox"> readonly</div>
+        <div class="adminrow">
+          <input id="admin-block-ip" placeholder="ip">
+          <div class="link" id="admin-block-btn">block</div>
+          <div class="link" id="admin-unblock-btn">unblock</div>
+        </div>
+        <div class="adminrow">
+          <input id="admin-purge-title" placeholder="title">
+          <span id="admin-purge-id"></span>
+          <div class="link" id="admin-purge-btn">purge</div>
+        </div>
+        <h2>limits</h2>
+        <div class="adminrow">
+          <input id="admin-limit-ip" placeholder="per ip">
+          <input id="admin-limit-note" placeholder="per note">
+          <input id="admin-limit-ct" placeholder="max ct">
+          <div class="link" id="admin-limits-btn">apply</div>
+        </div>
+        <h2>audit</h2>
+        <div class="adminrow"><div class="link" id="admin-audit-btn">refresh audit</div></div>
+        <div id="admin-audit"></div>
+      </div>
       <textarea id="note" placeholder="type note here" style="display: none"></textarea>
     </div>
     <script type="module" src="/src/main.js"></script>

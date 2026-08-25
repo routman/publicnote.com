@@ -2,6 +2,8 @@
   "perIp": { "windowMs": 60000, "maxWrites": 120 },
   "perNote": { "windowMs": 60000, "maxWrites": 60 },
   "maxCtChars": 100000,
+  "readonly": false,
+  "blockedIps": [],
   "pow": {
     "minK": 1,
     "defaultK": 2,

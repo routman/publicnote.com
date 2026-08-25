@@ -15,6 +15,25 @@ publicnote.com {
 		Referrer-Policy strict-origin-when-cross-origin
 	}
 
+	# Admin tooling (phase 6): CIDR-gated at the edge AND by the backend.
+	# Only loopback, RFC1918 and Tailscale-CGNAT source IPs may reach it;
+	# everything else gets a flat 403 before proxying.
+	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
+
+	# Admin API: 403 for non-allowlisted source IPs, otherwise proxy.
+	handle /api/admin/* {
+		respond @adminDeny "forbidden" 403
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	# Admin page (static SPA asset): same CIDR gate.
+	handle /admin {
+		respond @adminDeny "forbidden" 403
+		root /opt/publicnote/web
+		try_files {path} /index.html
+		file_server
+	}
+
 	# API -> Node backend (127.0.0.1:3001). Backend handles CORS + OPTIONS.
 	handle /api/* {
 		reverse_proxy 127.0.0.1:3001

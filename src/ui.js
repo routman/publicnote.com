@@ -1,5 +1,6 @@
 import { state, subscribe, emit } from './state.js';
 import { load, save, pollServer, isNoteTitle } from './autosave.js';
+import { adminActive } from './admin.js';
 
 const POLL_MS = 10000;
 
@@ -18,11 +19,13 @@ function renderStatus() {
 function renderContent() {
   const t = state.title;
   const lower = t.toLowerCase();
-  els.home.style.display = t == '' ? '' : 'none';
-  els.terms.style.display = t == 'terms' ? '' : 'none';
-  els.suicide.style.display = lower == 'suicide' ? '' : 'none';
-  els.about.style.display = t == 'about' ? '' : 'none';
-  els.note.style.display = isNoteTitle(t) ? '' : 'none';
+  const admin = adminActive();
+  els.home.style.display = admin ? 'none' : t == '' ? '' : 'none';
+  els.terms.style.display = admin ? 'none' : t == 'terms' ? '' : 'none';
+  els.suicide.style.display = admin ? 'none' : lower == 'suicide' ? '' : 'none';
+  els.about.style.display = admin ? 'none' : t == 'about' ? '' : 'none';
+  els.note.style.display = admin ? 'none' : isNoteTitle(t) ? '' : 'none';
+  els.admin.style.display = admin ? '' : 'none';
 }
 
 function renderDot() {
@@ -55,6 +58,7 @@ export function init() {
   els.terms = document.querySelector('.page.terms');
   els.suicide = document.querySelector('.page.suicide');
   els.about = document.querySelector('.page.about');
+  els.admin = document.querySelector('.page.admin');
   els.note = document.getElementById('note');
   els.spinner = document.getElementById('spinner');
   els.checkmark = document.getElementById('checkmark');

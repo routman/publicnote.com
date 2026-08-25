@@ -13,6 +13,8 @@ export const LIMITS_DEFAULTS = {
   perIp: { windowMs: 60000, maxWrites: 120 },
   perNote: { windowMs: 60000, maxWrites: 60 },
   maxCtChars: 100000,
+  readonly: false,
+  blockedIps: [],
   pow: {
     minK: 1,
     defaultK: 2,
@@ -27,7 +29,7 @@ export const LIMITS_DEFAULTS = {
   }
 };
 
-function deepMerge(base, extra) {
+export function deepMerge(base, extra) {
   const out = {};
   for (const key of Object.keys(base)) {
     const b = base[key];

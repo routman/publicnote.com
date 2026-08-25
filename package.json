@@ -10,6 +10,7 @@
     "backend": "node backend/server.js",
     "test": "node scripts/cryptovectors.mjs && node scripts/pow-solve.mjs",
     "test:pow": "node scripts/pow-limits.mjs",
+    "test:admin": "node scripts/admin.mjs",
     "test:solve": "node scripts/pow-solve.mjs"
   },
   "dependencies": {
