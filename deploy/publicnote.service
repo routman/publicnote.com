@@ -12,6 +12,9 @@ Environment=PORT=3001
 Environment=HOST=127.0.0.1
 Environment=DB_PATH=/opt/publicnote/notes.db
 Environment=LIMITS_FILE=/opt/publicnote/limits.json
+# The admin gate re-checks the client IP at the app layer; behind Caddy the
+# real client IP arrives via X-Forwarded-For and is trusted only when set.
+Environment=TRUST_PROXY=1
 # PoW enforcement is on by default; add `Environment=POW_ENFORCE=0` for a
 # cutover/rollback window (unproven saves accepted but proof ignored).
 ExecStart=/usr/bin/node /opt/publicnote/server.js
