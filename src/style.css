@@ -244,6 +244,18 @@ a {
   border-width: 2px 9px 2px 2px;
 }
 
+#newdot {
+  position: absolute;
+  top: 41px;
+  right: 100px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  user-select: none;
+  display: none;
+}
+
 #spinner {
   display: inline-block;
   border: 2px solid;

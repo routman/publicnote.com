@@ -6,9 +6,10 @@
 //
 // Phase 2 hardening (shared with the mock via backend/lib):
 //   POST /api/challenge  -> { body: JSON.stringify({ nonce, k, expires }) }
-//   save2 accepts { id, ct, challenge, proof, version }; proof is required
-//   unless POW_ENFORCE=0; a stale version (409) rejects the write; rate and
-//   size caps come from a hot-reloadable JSON config (LIMITS_FILE).
+//   save2 accepts { id, ct, challenge, proof }; proof is required unless
+//   POW_ENFORCE=0. Saves are last-write-wins: every accepted save writes,
+//   no version tracking (a stray version field in the payload is ignored).
+//   Rate and size caps come from a hot-reloadable JSON config (LIMITS_FILE).
 //
 // Run: DB_PATH=/opt/publicnote/notes.db node backend/prod-server.js
 // Env: PORT (default 3001), HOST (default 127.0.0.1), DB_PATH (required in
@@ -34,23 +35,16 @@ db.exec(
   'CREATE TABLE IF NOT EXISTS notes (' +
     'id TEXT PRIMARY KEY NOT NULL, ' +
     'ct TEXT NOT NULL, ' +
-    'version INTEGER NOT NULL DEFAULT 0, ' +
     'updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP' +
   ');'
 );
-// Existing databases (pre-phase-2) gain the version column, defaulting the
-// legacy rows to version 0.
-try {
-  db.exec('ALTER TABLE notes ADD COLUMN version INTEGER NOT NULL DEFAULT 0;');
-} catch (error) {
-  // Column already present (new database): expected, ignore.
-}
+// Note: pre-last-write-wins databases have a dormant `version` column; it is
+// no longer read or written (last-write-wins: saves carry no version).
 
-const getStmt = db.prepare('SELECT ct, version FROM notes WHERE id = ?');
+const getStmt = db.prepare('SELECT ct FROM notes WHERE id = ?');
 const upsertStmt = db.prepare(
-  'INSERT INTO notes (id, ct, version, updated_at) VALUES (?, ?, ?, datetime(\'now\')) ' +
-    'ON CONFLICT(id) DO UPDATE SET ct = excluded.ct, version = excluded.version, ' +
-    'updated_at = excluded.updated_at;'
+  'INSERT INTO notes (id, ct, updated_at) VALUES (?, ?, datetime(\'now\')) ' +
+    'ON CONFLICT(id) DO UPDATE SET ct = excluded.ct, updated_at = excluded.updated_at;'
 );
 
 const limitsFile = process.env.LIMITS_FILE;
@@ -96,7 +90,7 @@ app.post('/api/get2', function (req, res) {
   if (!row) {
     return res.json({});
   }
-  res.json({ body: JSON.stringify({ ct: row.ct, version: row.version }) });
+  res.json({ body: JSON.stringify({ ct: row.ct }) });
 });
 
 app.post('/api/save2', function (req, res) {
@@ -122,25 +116,13 @@ app.post('/api/save2', function (req, res) {
       return res.status(401).json({ body: 'challenge ' + verdict.reason });
     }
   }
-  const row = getStmt.get(id);
-  const current = row === undefined ? 0 : row.version;
-  if (body.version !== undefined) {
-    const clientVersion = Number(body.version);
-    if (!Number.isInteger(clientVersion) || clientVersion < 0) {
-      return res.status(400).json({ body: 'bad request' });
-    }
-    if (clientVersion !== current) {
-      return res.status(409).json({ body: 'stale write', version: current });
-    }
-  }
   if (String(ct).length >= limits.cfg.maxCtChars) {
     return res.status(413).json({ body: 'note too large' });
   }
-  const version = current + 1;
-  upsertStmt.run(id, ct, version);
+  upsertStmt.run(id, ct);
   limits.recordWrite(ip, id, now);
   pow.observe(now);
-  res.json({ body: 'successfully saved', version });
+  res.json({ body: 'successfully saved' });
 });
 
 const host = process.env.HOST || '127.0.0.1';

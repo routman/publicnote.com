@@ -34,11 +34,7 @@ export async function fetchSave(id, ct, extra) {
   if (extra && extra.proof !== undefined) {
     payload.proof = extra.proof;
   }
-  if (extra && extra.version !== undefined) {
-    payload.version = extra.version;
-  }
-  // Returns the raw Response: callers need status codes, Retry-After, and
-  // the version stamped on success.
+  // Returns the raw Response: callers need status codes and Retry-After.
   return fetch(API_BASE + '/api/save2', {
     method: 'POST',
     mode: 'cors',

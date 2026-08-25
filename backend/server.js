@@ -1,6 +1,7 @@
 // publicnote mock backend (in-memory, optional --persist snapshot).
-// Phase 2 hardening: write-side PoW (challenge + proof), server-stamped
-// versions with stale-write rejection, per-IP / per-note rate + size caps.
+// Phase 2 hardening: write-side PoW (challenge + proof), per-IP / per-note
+// rate + size caps. Saves are last-write-wins: every accepted save writes,
+// no version tracking, no stale-write rejection.
 // All hardening primitives live in backend/lib so the production backend
 // (backend/prod-server.js) speaks the exact same protocol.
 //
@@ -16,18 +17,19 @@ import { Limits, loadLimitsConfig, watchLimitsFile, clientIp } from './lib/limit
 //                   prod sets this from the POW_ENFORCE env during cutover)
 //   limitsFile    - JSON file with rate/size/pow config; hot-reloaded on mtime change
 //   limitsWatchMs - poll interval for limitsFile (tests shorten this)
-//   notes         - seed map/object: id -> ct string | { ct, version }
+//   notes         - seed map/object: id -> ct string (legacy { ct, ... }
+//                   snapshots are accepted too; extra fields are ignored)
 //   onWrite       - callback(notes) after each successful save (persist hook)
 export function createApp(opts = {}) {
   const enforcePow = opts.enforcePow !== false;
-  const notes = new Map(); // id -> { ct, version }
+  const notes = new Map(); // id -> ct (string)
 
   if (opts.notes) {
     for (const [id, value] of Object.entries(opts.notes)) {
       if (typeof value === 'string') {
-        notes.set(id, { ct: value, version: 0 });
+        notes.set(id, value);
       } else if (value && typeof value.ct === 'string') {
-        notes.set(id, { ct: value.ct, version: Number.isInteger(value.version) ? value.version : 0 });
+        notes.set(id, value.ct);
       }
     }
   }
@@ -70,11 +72,11 @@ export function createApp(opts = {}) {
     if (typeof id !== 'string') {
       return res.status(400).json({ body: 'bad request' });
     }
-    const note = notes.get(id);
-    if (note === undefined) {
+    const ct = notes.get(id);
+    if (ct === undefined) {
       return res.json({});
     }
-    res.json({ body: JSON.stringify({ ct: note.ct, version: note.version }) });
+    res.json({ body: JSON.stringify({ ct }) });
   });
 
   app.post('/api/save2', function (req, res) {
@@ -99,27 +101,16 @@ export function createApp(opts = {}) {
         return res.status(401).json({ body: 'challenge ' + verdict.reason });
       }
     }
-    const current = notes.get(id) === undefined ? 0 : notes.get(id).version;
-    if (body.version !== undefined) {
-      const clientVersion = Number(body.version);
-      if (!Number.isInteger(clientVersion) || clientVersion < 0) {
-        return res.status(400).json({ body: 'bad request' });
-      }
-      if (clientVersion !== current) {
-        return res.status(409).json({ body: 'stale write', version: current });
-      }
-    }
     if (String(ct).length >= limits.cfg.maxCtChars) {
       return res.status(413).json({ body: 'note too large' });
     }
-    const version = current + 1;
-    notes.set(id, { ct, version });
+    notes.set(id, ct);
     limits.recordWrite(clientIp(req), id, now);
     pow.observe(now);
     if (typeof opts.onWrite === 'function') {
       opts.onWrite(notes);
     }
-    res.json({ body: 'successfully saved', version });
+    res.json({ body: 'successfully saved' });
   });
 
   return { app, notes, limits, pow, challenges };
@@ -140,7 +131,8 @@ if (isDirectRun) {
   let seed = null;
   if (persistFile && existsSync(persistFile)) {
     try {
-      // Backward compatible: legacy snapshots map id -> ct string (version 0).
+      // Snapshots map id -> ct string (legacy { ct, ... } objects are also
+      // accepted by the seed loader; extra fields are ignored).
       seed = JSON.parse(readFileSync(persistFile, 'utf8'));
     } catch (error) {
       console.error('failed to load notes file:', error.message);

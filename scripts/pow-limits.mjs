@@ -1,6 +1,6 @@
 // Phase 2 hardening regressions: run `npm run test:pow`.
 // Exercises the mock backend (backend/server.js createApp) over real HTTP:
-// challenge endpoint, PoW verification, version stamping, stale writes,
+// challenge endpoint, PoW verification, last-write-wins saves,
 // rate/size caps, hot-reloadable limits, and the adaptive difficulty.
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, unlinkSync } from 'node:fs';
@@ -193,8 +193,8 @@ async function main() {
     }
   });
 
-  // --- versioning ---
-  await test('valid save stamps version 1; get2 echoes it', async function () {
+  // --- last-write-wins ---
+  await test('save writes ct; get2 echoes it', async function () {
     const app = await startApp();
     try {
       const bits = await challengeFor(app);
@@ -206,18 +206,18 @@ async function main() {
       });
       assert.equal(save.status, 200);
       assert.equal(save.json.body, 'successfully saved');
-      assert.equal(save.json.version, 1);
+      assert.equal(save.json.version, undefined);
 
       const get = await post(app, '/api/get2', { id: 'alpha' });
       const d = JSON.parse(get.json.body);
       assert.equal(d.ct, 'ct1');
-      assert.equal(d.version, 1);
+      assert.equal(d.version, undefined);
     } finally {
       await app.stop();
     }
   });
 
-  await test('stale write -> 409 with current version', async function () {
+  await test('stray version field is ignored (last write wins)', async function () {
     const app = await startApp();
     try {
       let bits = await challengeFor(app);
@@ -227,7 +227,7 @@ async function main() {
         challenge: bits.nonce,
         proof: bits.proof
       });
-      assert.equal(first.json.version, 1);
+      assert.equal(first.status, 200);
 
       bits = await challengeFor(app);
       const second = await post(app, '/api/save2', {
@@ -235,28 +235,19 @@ async function main() {
         ct: 'ct2',
         challenge: bits.nonce,
         proof: bits.proof,
-        version: 1
+        version: 1 // stray field from an old client: ignored
       });
       assert.equal(second.status, 200);
-      assert.equal(second.json.version, 2);
+      assert.equal(second.json.body, 'successfully saved');
 
-      bits = await challengeFor(app);
-      const stale = await post(app, '/api/save2', {
-        id: 'alpha',
-        ct: 'ct3',
-        challenge: bits.nonce,
-        proof: bits.proof,
-        version: 1 // lagging behind current (2)
-      });
-      assert.equal(stale.status, 409);
-      assert.equal(stale.json.body, 'stale write');
-      assert.equal(stale.json.version, 2);
+      const get = await post(app, '/api/get2', { id: 'alpha' });
+      assert.equal(JSON.parse(get.json.body).ct, 'ct2');
     } finally {
       await app.stop();
     }
   });
 
-  await test('save without version is accepted', async function () {
+  await test('consecutive saves: last write wins', async function () {
     const app = await startApp();
     try {
       let bits = await challengeFor(app);
@@ -274,7 +265,9 @@ async function main() {
         proof: bits.proof
       });
       assert.equal(save.status, 200);
-      assert.equal(save.json.version, 2);
+
+      const get = await post(app, '/api/get2', { id: 'alpha' });
+      assert.equal(JSON.parse(get.json.body).ct, 'ct2');
     } finally {
       await app.stop();
     }
@@ -298,15 +291,6 @@ async function main() {
       assert.equal((await post(app, '/api/save2', { id: 123, ct: 'x' })).status, 400);
       assert.equal((await post(app, '/api/save2', { id: 'n' })).status, 400);
       assert.equal((await post(app, '/api/get2', { id: 123 })).status, 400);
-      const bits = await challengeFor(app);
-      const badVersion = await post(app, '/api/save2', {
-        id: 'n',
-        ct: 'x',
-        challenge: bits.nonce,
-        proof: bits.proof,
-        version: 'x'
-      });
-      assert.equal(badVersion.status, 400);
     } finally {
       await app.stop();
     }
@@ -401,7 +385,7 @@ async function main() {
       const result = await post(app, '/api/save2', { id: 'n', ct: 'ct' });
       assert.equal(result.status, 200);
       assert.equal(result.json.body, 'successfully saved');
-      assert.equal(result.json.version, 1);
+      assert.equal(result.json.version, undefined);
     } finally {
       await app.stop();
     }

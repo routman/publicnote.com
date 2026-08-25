@@ -1,5 +1,7 @@
 import { state, subscribe, emit } from './state.js';
-import { load, save } from './autosave.js';
+import { load, save, pollServer, isNoteTitle } from './autosave.js';
+
+const POLL_MS = 10000;
 
 let statusHover = false;
 
@@ -20,8 +22,11 @@ function renderContent() {
   els.terms.style.display = t == 'terms' ? '' : 'none';
   els.suicide.style.display = lower == 'suicide' ? '' : 'none';
   els.about.style.display = t == 'about' ? '' : 'none';
-  const noteVisible = !(t == '' || t == 'terms' || lower == 'suicide' || t == 'about');
-  els.note.style.display = noteVisible ? '' : 'none';
+  els.note.style.display = isNoteTitle(t) ? '' : 'none';
+}
+
+function renderDot() {
+  els.newdot.style.display = state.serverAhead ? '' : 'none';
 }
 
 function syncEditor() {
@@ -57,6 +62,7 @@ export function init() {
   els.close = document.querySelector('.close.icon');
   els.eyeOpen = document.getElementById('eye-open');
   els.eyeClosed = document.getElementById('eye-closed');
+  els.newdot = document.getElementById('newdot');
 
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
@@ -130,12 +136,25 @@ export function init() {
   subscribe(function() {
     renderStatus();
     renderContent();
+    renderDot();
     syncEditor();
   });
 
   renderStatus();
   renderContent();
+  renderDot();
   syncEditor();
+
+  setInterval(function() {
+    if (document.visibilityState === 'visible') {
+      pollServer();
+    }
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      pollServer();
+    }
+  });
 
   els.title.focus();
 }

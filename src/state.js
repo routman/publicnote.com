@@ -5,8 +5,8 @@ export const state = {
   autosave: null,
   autoload: null,
   loading: false,
-  version: 0,
-  conflict: false
+  lastCt: null,
+  serverAhead: false
 };
 
 const listeners = [];
