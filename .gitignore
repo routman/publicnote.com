@@ -8,3 +8,6 @@ CLAUDE.md
 .claude/
 PHASES.md
 docs/api.md
+STATE.md
+.keys/
+docs/ops-runbook.md

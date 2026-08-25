@@ -1,0 +1,10 @@
+{
+  "name": "publicnote-backend",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "publicnote production API backend (Node + node:sqlite WAL + express)",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -1,0 +1,24 @@
+[Unit]
+Description=publicnote API backend (Node + node:sqlite WAL + express)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=publicnote
+Group=publicnote
+WorkingDirectory=/opt/publicnote
+Environment=HOME=/opt/publicnote
+Environment=PORT=3001
+Environment=HOST=127.0.0.1
+Environment=DB_PATH=/opt/publicnote/notes.db
+ExecStart=/usr/bin/node /opt/publicnote/server.js
+Restart=on-failure
+RestartSec=2
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+# SQLite WAL: keep the DB directory intact across reboots
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,29 @@
+# publicnote.com — Caddy site config.
+# - Automatic HTTPS: Caddy obtains a Let's Encrypt cert for publicnote.com and
+#   redirects HTTP -> HTTPS. Requires the apex A record to point at this box and
+#   inbound 80/443 open.
+# - /api/* -> Node backend on loopback (backend sets its own CORS headers).
+# - everything else -> the built frontend (SPA) under /opt/publicnote/web.
+
+publicnote.com {
+	encode gzip
+
+	# Hide the server token, add basic hardening headers on every response.
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# API -> Node backend (127.0.0.1:3001). Backend handles CORS + OPTIONS.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	# Static frontend (SPA).
+	handle {
+		root /opt/publicnote/web
+		try_files {path} /index.html
+		file_server
+	}
+}

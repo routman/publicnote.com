@@ -1,0 +1,17 @@
+{
+  "perIp": { "windowMs": 60000, "maxWrites": 120 },
+  "perNote": { "windowMs": 60000, "maxWrites": 60 },
+  "maxCtChars": 100000,
+  "pow": {
+    "minK": 1,
+    "defaultK": 2,
+    "busyK": 4,
+    "maxK": 8,
+    "expiryMs": 15000,
+    "windowMs": 60000,
+    "quietAt": 10,
+    "busyAt": 60,
+    "floodAt": 300,
+    "maxChallenges": 50000
+  }
+}

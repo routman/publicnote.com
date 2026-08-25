@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "backend": "node backend/server.js",
-    "test": "node scripts/cryptovectors.mjs"
+    "test": "node scripts/cryptovectors.mjs",
+    "test:pow": "node scripts/pow-limits.mjs"
   },
   "dependencies": {
     "crypto-js": "3.1.9-1"

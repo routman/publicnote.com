@@ -4,7 +4,9 @@ export const state = {
   status: '',
   autosave: null,
   autoload: null,
-  loading: false
+  loading: false,
+  version: 0,
+  conflict: false
 };
 
 const listeners = [];
