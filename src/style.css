@@ -9,7 +9,7 @@ html[data-theme="dark"] {
 
 html,
 body {
-  font-family: "Source Code Pro", serif;
+  font-family: "IBM Plex Mono", serif;
   font-optical-sizing: auto;
   font-weight: 300;
   font-style: normal;
@@ -87,7 +87,7 @@ textarea::selection {
 input,
 textarea {
   display: block;
-  font-family: "Source Code Pro", serif;
+  font-family: "IBM Plex Mono", serif;
   color: var(--color-text);
   caret-color: var(--color-primary);
   background: var(--color-bg);
