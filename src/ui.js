@@ -68,12 +68,9 @@ export function init() {
   els.eyeClosed = document.getElementById('eye-closed');
   els.exclaim = document.getElementById('exclaim');
 
-    els.title.addEventListener
-('input', function() {
+  els.title.addEventListener('input', function() {
     state.title = els.title.value;
     renderContent();
-  });
-  els.title.addEventListener('keyup', function() {
     clearTimeout(state.autoload);
     clearTimeout(state.autosave);
     if (state.title != '' && state.title != 'terms' && state.title != 'contact' && state.title != 'privacy' && state.title.toLowerCase() != 'suicide') {
@@ -87,8 +84,6 @@ export function init() {
 
   els.note.addEventListener('input', function() {
     state.note = els.note.value;
-  });
-  els.note.addEventListener('keyup', function() {
     save(state.title, state.note);
   });
 
