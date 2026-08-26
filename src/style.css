@@ -112,7 +112,7 @@ input {
   border-image: linear-gradient(to right, var(--color-primary) 0%, var(--color-accent) 100%);
   border-image-slice: 1;
   margin: 16px;
-  padding: 0 90px 0 0;
+  padding: 1px 74px 0 0;
   margin-top: 24px;
   margin-bottom: 8px;
 }
