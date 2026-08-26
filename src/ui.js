@@ -24,6 +24,7 @@ function renderContent() {
   els.terms.style.display = admin ? 'none' : t == 'terms' ? '' : 'none';
   els.suicide.style.display = admin ? 'none' : lower == 'suicide' ? '' : 'none';
   els.about.style.display = admin ? 'none' : t == 'about' ? '' : 'none';
+  els.privacy.style.display = admin ? 'none' : t == 'privacy' ? '' : 'none';
   els.note.style.display = admin ? 'none' : isNoteTitle(t) ? '' : 'none';
   els.admin.style.display = admin ? '' : 'none';
 }
@@ -58,6 +59,7 @@ export function init() {
   els.terms = document.querySelector('.page.terms');
   els.suicide = document.querySelector('.page.suicide');
   els.about = document.querySelector('.page.about');
+  els.privacy = document.querySelector('.page.privacy');
   els.admin = document.querySelector('.page.admin');
   els.note = document.getElementById('note');
   els.spinner = document.getElementById('spinner');
@@ -76,7 +78,7 @@ export function init() {
   els.title.addEventListener('keyup', function() {
     clearTimeout(state.autoload);
     clearTimeout(state.autosave);
-    if (state.title != '' && state.title != 'terms' && state.title != 'contact' && state.title.toLowerCase() != 'suicide') {
+    if (state.title != '' && state.title != 'terms' && state.title != 'contact' && state.title != 'privacy' && state.title.toLowerCase() != 'suicide') {
       load(state.title);
     } else {
       state.note = '';

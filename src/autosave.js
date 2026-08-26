@@ -6,7 +6,7 @@ import { solvePowAsync } from './pow.js';
 let controller = null;
 
 export function isNoteTitle(t) {
-  return !(t == '' || t == 'terms' || t.toLowerCase() == 'suicide' || t == 'about');
+  return !(t == '' || t == 'terms' || t.toLowerCase() == 'suicide' || t == 'about' || t == 'privacy');
 }
 
 export function load(title) {
