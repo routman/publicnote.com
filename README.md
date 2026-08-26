@@ -31,7 +31,7 @@ Notes can be public or private depending on the complexity of the title:
 
 The more complex the title, the stronger the effective privacy.
 
-Using common words as the title is for entertainment purposes only. You will find a variety of messages left by others. If you find something offensive, just delete it.
+Using common words as the title is for entertainment purposes only. You will find a variety of messages left by others. If you find something offensive, please delete it.
 
 **Do not use publicnote to store sensitive information.**
 
