@@ -447,36 +447,89 @@
         </div>
         <br>
         <div id="admin-error"></div>
-        <h2>stats</h2>
-        <div class="adminrow">notes: <span id="admin-notes">-</span></div>
-        <div class="adminrow">writes/60s: <span id="admin-writes">-</span></div>
-        <div class="adminrow">pow k: <span id="admin-powk">-</span></div>
-        <div class="adminrow">readonly: <span id="admin-readonly">-</span></div>
-        <div class="adminrow">blocked: <span id="admin-blocked">-</span></div>
-        <div class="adminrow">disk free: <span id="admin-disk">-</span></div>
-        <div class="adminrow">uptime: <span id="admin-uptime">-</span></div>
-        <h2>controls</h2>
-        <div class="adminrow"><input id="admin-readonly-toggle" type="checkbox"> readonly</div>
-        <div class="adminrow">
-          <input id="admin-block-ip" placeholder="ip">
-          <div class="link" id="admin-block-btn">block</div>
-          <div class="link" id="admin-unblock-btn">unblock</div>
+
+        <div class="card">
+          <h2>status</h2>
+          <div class="card-sub">live · refreshed every 5 s</div>
+          <div class="statgrid">
+            <div class="stat">
+              <div class="stat-label">notes</div>
+              <div class="stat-value" id="admin-notes">-</div>
+              <div class="stat-hint">notes stored</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">writes / 60s</div>
+              <div class="stat-value" id="admin-writes">-</div>
+              <div class="stat-hint">accepted saves in the last minute</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">pow k</div>
+              <div class="stat-value" id="admin-powk">-</div>
+              <div class="stat-hint">proof-of-work difficulty · 1 quiet → 8 flood</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">readonly</div>
+              <div class="stat-value" id="admin-readonly">-</div>
+              <div class="stat-hint">when ON, every save is rejected</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">blocked</div>
+              <div class="stat-value" id="admin-blocked">-</div>
+              <div class="stat-hint">IPs currently blocked</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">disk free</div>
+              <div class="stat-value" id="admin-disk">-</div>
+              <div class="stat-hint">free space on the box</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">uptime</div>
+              <div class="stat-value" id="admin-uptime">-</div>
+              <div class="stat-hint">since the backend last restarted</div>
+            </div>
+          </div>
         </div>
-        <div class="adminrow">
-          <input id="admin-purge-title" placeholder="title">
+
+        <div class="card">
+          <h2>emergency controls</h2>
+          <div class="card-sub">panic levers · each takes effect immediately</div>
+          <div class="adminrow">
+            <input id="admin-readonly-toggle" type="checkbox">
+            <span>readonly</span>
+            <span class="field-hint">reject all saves</span>
+          </div>
+          <div class="adminrow">
+            <input id="admin-block-ip" placeholder="ip">
+            <div class="link" id="admin-block-btn">block</div>
+            <div class="link" id="admin-unblock-btn">unblock</div>
+          </div>
+          <div class="field-hint">block / unblock an IP address</div>
+          <div class="adminrow">
+            <input id="admin-purge-title" placeholder="title">
+            <div class="link" id="admin-purge-btn">purge</div>
+          </div>
           <span id="admin-purge-id"></span>
-          <div class="link" id="admin-purge-btn">purge</div>
+          <div class="field-hint">delete a note by its exact title (case-sensitive)</div>
         </div>
-        <h2>limits</h2>
-        <div class="adminrow">
-          <input id="admin-limit-ip" placeholder="per ip">
-          <input id="admin-limit-note" placeholder="per note">
-          <input id="admin-limit-ct" placeholder="max ct">
-          <div class="link" id="admin-limits-btn">apply</div>
+
+        <div class="card">
+          <h2>limits</h2>
+          <div class="card-sub">write caps · hot-reload, no restart</div>
+          <div class="adminrow">
+            <input id="admin-limit-ip" placeholder="per ip">
+            <input id="admin-limit-note" placeholder="per note">
+            <input id="admin-limit-ct" placeholder="max ct">
+            <div class="link" id="admin-limits-btn">apply</div>
+          </div>
+          <div class="field-hint">per ip = saves per IP per 60 s · per note = saves per note per 60 s · max ct = max ciphertext chars</div>
         </div>
-        <h2>audit</h2>
-        <div class="adminrow"><div class="link" id="admin-audit-btn">refresh audit</div></div>
-        <div id="admin-audit"></div>
+
+        <div class="card">
+          <h2>audit</h2>
+          <div class="card-sub">recent admin + save events</div>
+          <div class="adminrow"><div class="link" id="admin-audit-btn">refresh audit</div></div>
+          <div id="admin-audit"></div>
+        </div>
       </div>
       <textarea id="note" placeholder="type note here" style="display: none"></textarea>
     </div>
