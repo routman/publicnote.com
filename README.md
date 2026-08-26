@@ -91,7 +91,7 @@ Yes.
 100,000 characters.
 
 **What does the status icon mean?**
-A green checkmark means the note loaded or saved successfully. A red X means it failed.
+A green checkmark means the note loaded or saved successfully. A red X means it failed. An exclamation mark means the note was changed elsewhere and the server has a newer copy — hover to reveal a refresh icon, then click it to load the newer version.
 
 **What is the eye icon for?**
 It toggles the title between hidden and visible, like a password field.
