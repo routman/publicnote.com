@@ -259,8 +259,8 @@ a {
   display: inline-block;
   color: var(--color-primary);
   font-weight: 700;
-  font-size: 24px;
-  line-height: 24px;
+  font-size: 23px;
+  line-height: 16px;
   margin-top: 13px;
   margin-right: 2px;
 }
