@@ -46,3 +46,42 @@ publicnote.com {
 		file_server
 	}
 }
+
+# Tailscale tailnet access (no /etc/hosts): the box's magic-DNS hostname.
+# Self-signed (internal) cert -> one-time browser warning. Mirrors the
+# publicnote.com block (CIDR admin gate + static SPA + API proxy) so the
+# admin panel and notes app both work over the tailnet.
+pubilcnote-aws.taild9a60e.ts.net, pubilcnote-aws {
+	tls internal
+	encode gzip
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
+
+	handle /api/admin/* {
+		respond @adminDeny "forbidden" 403
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	handle /admin {
+		respond @adminDeny "forbidden" 403
+		root /opt/publicnote/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	handle {
+		root /opt/publicnote/web
+		try_files {path} /index.html
+		file_server
+	}
+}

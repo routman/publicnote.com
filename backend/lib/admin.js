@@ -57,7 +57,7 @@ export function isAllowedAdminIp(ip) {
     if (base === null || Number.isNaN(prefix)) {
       continue;
     }
-    const mask = (prefix === 0 ? 0 : (0xFFFFFFFF ^ (0xFFFFFFFF >>> (32 - prefix)))) >>> 0;
+    const mask = (prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix))) >>> 0;
     if ((((n ^ base) >>> 0) & mask) === 0) {
       return true;
     }
