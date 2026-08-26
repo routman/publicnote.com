@@ -13,7 +13,7 @@ body {
   font-optical-sizing: auto;
   font-weight: 300;
   font-style: normal;
-  font-size: 18px;
+  font-size: 17px;
   color: var(--color-text);
   background: var(--color-bg);
   margin: 0;
@@ -91,7 +91,7 @@ textarea {
   color: var(--color-text);
   caret-color: var(--color-primary);
   background: var(--color-bg);
-  font-size: 18px;
+  font-size: 17px;
   border: none;
   border-radius: 0;
   box-sizing: border-box;
