@@ -68,12 +68,8 @@ export function init() {
   els.eyeClosed = document.getElementById('eye-closed');
   els.newdot = document.getElementById('newdot');
 
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }
-
-  els.title.addEventListener('input', function() {
+    els.title.addEventListener
+('input', function() {
     state.title = els.title.value;
     renderContent();
   });
@@ -118,14 +114,8 @@ export function init() {
     setEye(false);
   });
 
-  document.getElementById('theme-toggle').addEventListener('click', function() {
-    const current = document.documentElement.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-  });
-
-  document.getElementById('app').addEventListener('click', function(e) {
+    document.getElementById('app').addEventListener
+('click', function(e) {
     const target = e.target.closest('[data-goto]');
     if (target) {
       navigate(target.getAttribute('data-goto'));
