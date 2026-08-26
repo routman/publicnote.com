@@ -74,7 +74,7 @@ textarea::selection {
 #status {
   position: absolute;
   top: 23px;
-  right: 91px;
+  right: 57px;
   user-select: none;
   cursor: pointer;
 }
