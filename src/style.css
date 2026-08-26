@@ -257,33 +257,11 @@ a {
 
 #exclaim {
   display: inline-block;
-  width: 8px;
-  height: 16px;
+  color: var(--color-primary);
+  font-size: 16px;
+  line-height: 16px;
   margin-top: 14px;
   margin-right: 6px;
-  position: relative;
-}
-
-#exclaim:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 2.5px;
-  width: 3px;
-  height: 11px;
-  border-radius: 2px;
-  background: var(--color-primary);
-}
-
-#exclaim:after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 2.5px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--color-primary);
 }
 
 .refresh.icon {
