@@ -10,9 +10,9 @@ All notes are auto-saved to the cloud as you type. The check mark in the upper r
 Every note is encrypted with AES-256, using the title as the encryption key. An SHA-256 hash of the title is then used to index the encrypted note in a database. Because SHA-256 is a one-way function and the process happens in your browser, the title is never exposed. Neither the website owner nor the web host (AWS) can view the plaintext contents of any note, unless the title is easily guessed.
 
 ```
-title → SHA256 → index
-  ⇣
- 🔑
+       title → SHA256 → index
+         ⇣
+        🔑
 note → AES256 → encrypted note
 ```
 
