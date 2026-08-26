@@ -515,13 +515,24 @@
         <div class="card">
           <h2>limits</h2>
           <div class="card-sub">write caps · hot-reload, no restart</div>
-          <div class="adminrow">
-            <input id="admin-limit-ip" placeholder="per ip">
-            <input id="admin-limit-note" placeholder="per note">
-            <input id="admin-limit-ct" placeholder="max ct">
-            <div class="link" id="admin-limits-btn">apply</div>
+          <div class="limitgrid">
+            <label class="limitfield">
+              <span class="limit-label">per-IP cap</span>
+              <input id="admin-limit-ip" placeholder="120">
+              <span class="limit-hint">max saves from one IP in 60 s</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">per-note cap</span>
+              <input id="admin-limit-note" placeholder="60">
+              <span class="limit-hint">max saves to one note in 60 s</span>
+            </label>
+            <label class="limitfield">
+              <span class="limit-label">max size</span>
+              <input id="admin-limit-ct" placeholder="100000">
+              <span class="limit-hint">max note size in characters</span>
+            </label>
           </div>
-          <div class="field-hint">per ip = saves per IP per 60 s · per note = saves per note per 60 s · max ct = max ciphertext chars</div>
+          <div class="adminrow"><div class="link" id="admin-limits-btn">apply</div></div>
         </div>
 
         <div class="card">

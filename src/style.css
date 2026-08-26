@@ -511,3 +511,44 @@ a {
 .adminrow .field-hint {
   margin: 0 0 12px;
 }
+
+.limitgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.limitfield {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.limit-label {
+  font-size: 12px;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.limitfield input {
+  width: 100%;
+  line-height: 18px;
+  padding: 2px 6px;
+  border: none;
+  border-bottom: 1px solid var(--color-primary);
+  border-width: 0 0 1px 0;
+  border-image: none;
+}
+
+.limitfield input:focus {
+  border-bottom: 1px solid var(--color-accent);
+  border-width: 0 0 1px 0;
+  border-image: none;
+}
+
+.limit-hint {
+  font-size: 12px;
+  color: #777777;
+}
