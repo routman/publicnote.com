@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.PROD ? 'https://publicnote.com' : '';
+const API_BASE = '';
 
 export async function fetchNote(id, signal) {
   const response = await fetch(API_BASE + '/api/get2', {
