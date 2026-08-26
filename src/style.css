@@ -132,7 +132,6 @@ textarea {
   flex-grow: 1;
   width: 100%;
   padding: 16px;
-  line-height: 20px;
   overflow-y: scroll;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
