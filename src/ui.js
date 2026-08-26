@@ -10,8 +10,10 @@ const els = {};
 
 function renderStatus() {
   const s = state.status;
+  const ahead = state.serverAhead;
   els.spinner.style.display = s == 'busy' ? '' : 'none';
-  els.checkmark.style.display = s == 'ok' && !statusHover ? '' : 'none';
+  els.checkmark.style.display = s == 'ok' && !statusHover && !ahead ? '' : 'none';
+  els.exclaim.style.display = s == 'ok' && !statusHover && ahead ? '' : 'none';
   els.refresh.style.display = s == 'error' || (s == 'ok' && statusHover) ? '' : 'none';
   els.close.style.display = s == 'error' && !statusHover ? '' : 'none';
 }
@@ -27,10 +29,6 @@ function renderContent() {
   els.privacy.style.display = admin ? 'none' : t == 'privacy' ? '' : 'none';
   els.note.style.display = admin ? 'none' : isNoteTitle(t) ? '' : 'none';
   els.admin.style.display = admin ? '' : 'none';
-}
-
-function renderDot() {
-  els.newdot.style.display = state.serverAhead ? 'block' : 'none';
 }
 
 function syncEditor() {
@@ -68,7 +66,7 @@ export function init() {
   els.close = document.querySelector('.close.icon');
   els.eyeOpen = document.getElementById('eye-open');
   els.eyeClosed = document.getElementById('eye-closed');
-  els.newdot = document.getElementById('newdot');
+  els.exclaim = document.getElementById('exclaim');
 
     els.title.addEventListener
 ('input', function() {
@@ -132,13 +130,11 @@ export function init() {
   subscribe(function() {
     renderStatus();
     renderContent();
-    renderDot();
     syncEditor();
   });
 
   renderStatus();
   renderContent();
-  renderDot();
   syncEditor();
 
   setInterval(function() {
