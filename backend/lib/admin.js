@@ -143,3 +143,21 @@ export function rewriteLimitsFile(file, patch) {
   renameSync(tmp, file);
   return merged;
 }
+
+// Fill the last `days` UTC days with { date, uniqueIps, writes } rows,
+// zero-filling missing days. `get` maps a 'YYYY-MM-DD' key to
+// { uniqueIps, writes } or undefined.
+export function userDaysWindow(get, days) {
+  const out = [];
+  const now = Date.now();
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const date = new Date(now - i * 86400000).toISOString().slice(0, 10);
+    const row = get(date);
+    out.push({
+      date,
+      uniqueIps: row && Number.isFinite(row.uniqueIps) ? row.uniqueIps : 0,
+      writes: row && Number.isFinite(row.writes) ? row.writes : 0
+    });
+  }
+  return out;
+}

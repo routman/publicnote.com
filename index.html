@@ -443,7 +443,7 @@
       </div>
       <div class="page admin" style="display: none">
         <div>
-          <div class="logo accent">public</div><div class="logo">note&nbsp;</div>
+          <div class="logo accent">public</div><div class="logo">note&nbsp;admin</div>
         </div>
         <br>
         <div id="admin-error"></div>
@@ -461,6 +461,11 @@
               <div class="stat-label">writes / 60s</div>
               <div class="stat-value" id="admin-writes">-</div>
               <div class="stat-hint">accepted saves in the last minute</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">active writers</div>
+              <div class="stat-value" id="admin-active">-</div>
+              <div class="stat-hint">unique IPs writing in the last minute</div>
             </div>
             <div class="stat">
               <div class="stat-label">pow k</div>
@@ -488,6 +493,12 @@
               <div class="stat-hint">since the backend last restarted</div>
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <h2>users</h2>
+          <div class="card-sub">unique writer IPs per UTC day · last 30 days</div>
+          <div id="admin-users-chart" class="users-chart"></div>
         </div>
 
         <div class="card">

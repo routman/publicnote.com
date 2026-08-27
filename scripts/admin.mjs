@@ -359,11 +359,81 @@ async function main() {
       const s = bodyOf(result);
       assert.equal(typeof s.notes, 'number');
       assert.equal(typeof s.writes60s, 'number');
+      assert.equal(typeof s.activeIps, 'number');
       assert.equal(typeof s.powK, 'number');
       assert.equal(typeof s.readonly, 'boolean');
       assert.ok(Array.isArray(s.blockedIps));
       assert.ok(s.freeDiskKb === null || typeof s.freeDiskKb === 'number');
       assert.equal(typeof s.uptimeS, 'number');
+    } finally {
+      await app.stop();
+    }
+  });
+
+  // --- active writers + user-days ---
+  await test('stats: activeIps counts unique writer IPs in the last minute', async function () {
+    const app = await startApp({ enforcePow: false });
+    try {
+      assert.equal(bodyOf(await post(app, '/api/admin/stats')).activeIps, 0);
+
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' });
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.8' });
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' }); // same ip again
+
+      assert.equal(bodyOf(await post(app, '/api/admin/stats')).activeIps, 2);
+    } finally {
+      await app.stop();
+    }
+  });
+
+  await test('user-days: returns a zero-filled 30-day window', async function () {
+    const app = await startApp({ enforcePow: false });
+    try {
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' });
+
+      const result = await post(app, '/api/admin/user-days', { days: 30 });
+      assert.equal(result.status, 200);
+      const days = bodyOf(result).days;
+      assert.ok(Array.isArray(days));
+      assert.equal(days.length, 30);
+      for (let i = 1; i < days.length; i += 1) {
+        assert.ok(days[i - 1].date < days[i].date, 'dates ascending');
+      }
+      for (const row of days) {
+        assert.equal(typeof row.date, 'string');
+        assert.equal(typeof row.uniqueIps, 'number');
+        assert.equal(typeof row.writes, 'number');
+      }
+      const today = days[days.length - 1];
+      assert.equal(today.uniqueIps, 1);
+      assert.equal(today.writes, 1);
+      for (let i = 0; i < days.length - 1; i += 1) {
+        assert.equal(days[i].uniqueIps, 0);
+        assert.equal(days[i].writes, 0);
+      }
+    } finally {
+      await app.stop();
+    }
+  });
+
+  await test('user-days: clamps days to 1..365 and defaults to 30', async function () {
+    const app = await startApp({ enforcePow: false });
+    try {
+      assert.equal(bodyOf(await post(app, '/api/admin/user-days', { days: 0 })).days.length, 1);
+      assert.equal(bodyOf(await post(app, '/api/admin/user-days', { days: 9999 })).days.length, 365);
+      assert.equal(bodyOf(await post(app, '/api/admin/user-days', { days: 'x' })).days.length, 30);
+      assert.equal(bodyOf(await post(app, '/api/admin/user-days', {})).days.length, 30);
+    } finally {
+      await app.stop();
+    }
+  });
+
+  await test('user-days: 403 for a disallowed source ip', async function () {
+    const app = await startApp({ trustProxy: true });
+    try {
+      const result = await post(app, '/api/admin/user-days', {}, { 'X-Forwarded-For': '8.8.8.8' });
+      assert.equal(result.status, 403);
+      assert.equal(bodyOf(result), 'forbidden');
     } finally {
       await app.stop();
     }

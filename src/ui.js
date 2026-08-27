@@ -29,6 +29,10 @@ function renderContent() {
   els.privacy.style.display = admin ? 'none' : t == 'privacy' ? '' : 'none';
   els.note.style.display = admin ? 'none' : isNoteTitle(t) ? '' : 'none';
   els.admin.style.display = admin ? '' : 'none';
+  els.title.style.display = admin ? 'none' : '';
+  els.status.style.display = admin ? 'none' : '';
+  els.eyeOpen.style.display = admin ? 'none' : els.title.type === 'text' ? '' : 'none';
+  els.eyeClosed.style.display = admin ? 'none' : els.title.type === 'text' ? 'none' : '';
 }
 
 function syncEditor() {
@@ -60,6 +64,7 @@ export function init() {
   els.privacy = document.querySelector('.page.privacy');
   els.admin = document.querySelector('.page.admin');
   els.note = document.getElementById('note');
+  els.status = document.getElementById('status');
   els.spinner = document.getElementById('spinner');
   els.checkmark = document.getElementById('checkmark');
   els.refresh = document.querySelector('.refresh.icon');
@@ -143,5 +148,7 @@ export function init() {
     }
   });
 
-  els.title.focus();
+  if (!adminActive()) {
+    els.title.focus();
+  }
 }

@@ -552,3 +552,21 @@ a {
   font-size: 12px;
   color: #777777;
 }
+
+.users-chart {
+  width: 100%;
+  display: block;
+}
+
+.users-chart rect {
+  fill: var(--color-primary);
+}
+
+.users-chart rect.zero {
+  fill: #4a454a;
+}
+
+.users-chart line.baseline {
+  stroke: #4a454a;
+  stroke-width: 1;
+}

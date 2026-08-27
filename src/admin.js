@@ -2,12 +2,15 @@ import { adminPost } from './api.js';
 import { noteId } from './crypto.js';
 
 const POLL_MS = 5000;
+const CHART_POLL_MS = 60000;
+const CHART_DAYS = 30;
 const IP_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 const POS_INT_RE = /^[1-9][0-9]*$/;
 
 let els = {};
 let statsInFlight = false;
 let auditInFlight = false;
+let usersInFlight = false;
 
 export function adminActive() {
   const path = window.location.pathname;
@@ -102,6 +105,7 @@ async function refreshStats() {
   const s = r.data;
   els.notes.textContent = String(s.notes);
   els.writes.textContent = String(s.writes60s);
+  els.active.textContent = s.activeIps === undefined ? '-' : String(s.activeIps);
   els.powk.textContent = String(s.powK);
   els.readonlySpan.textContent = s.readonly === true ? 'ON' : 'off';
   els.blocked.textContent = s.blockedIps && s.blockedIps.length > 0 ? s.blockedIps.join(', ') : 'none';
@@ -112,6 +116,54 @@ async function refreshStats() {
     els.disk.textContent = Math.round(s.freeDiskKb / 1024) + ' MiB';
   }
   els.uptime.textContent = formatUptime(s.uptimeS);
+}
+
+function renderUsersChart(rows) {
+  els.usersChart.textContent = '';
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return;
+  }
+  const n = rows.length;
+  const w = 600;
+  const h = 140;
+  const padTop = 8;
+  const padBottom = 4;
+  const slot = w / n;
+  const barW = Math.max(2, Math.floor(slot * 0.7));
+  let max = 1;
+  for (let i = 0; i < n; i++) {
+    if (rows[i].uniqueIps > max) {
+      max = rows[i].uniqueIps;
+    }
+  }
+  const innerH = h - padTop - padBottom;
+  const parts = [];
+  parts.push('<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" role="img" aria-label="unique writer IPs per day">');
+  parts.push('<line x1="0" y1="' + (h - padBottom) + '" x2="' + w + '" y2="' + (h - padBottom) + '" class="baseline"></line>');
+  for (let i = 0; i < n; i++) {
+    const r = rows[i];
+    const barH = Math.round((r.uniqueIps / max) * innerH);
+    const x = Math.round(i * slot + (slot - barW) / 2);
+    const y = h - padBottom - barH;
+    const cls = r.uniqueIps > 0 ? 'bar' : 'bar zero';
+    const tip = r.date + ': ' + r.uniqueIps + ' writer' + (r.uniqueIps === 1 ? '' : 's') + ', ' + r.writes + ' writes';
+    parts.push('<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + (r.uniqueIps > 0 ? Math.max(barH, 2) : 0) + '" class="' + cls + '"><title>' + tip + '</title></rect>');
+  }
+  parts.push('</svg>');
+  els.usersChart.innerHTML = parts.join('');
+}
+
+async function refreshUsers() {
+  if (usersInFlight) {
+    return;
+  }
+  usersInFlight = true;
+  const r = await adminPost('user-days', { days: CHART_DAYS });
+  usersInFlight = false;
+  if (!r.ok || !r.data || !Array.isArray(r.data.days)) {
+    return;
+  }
+  renderUsersChart(r.data.days);
 }
 
 async function prefillLimits() {
@@ -223,6 +275,8 @@ export function initAdmin() {
   els.error = document.getElementById('admin-error');
   els.notes = document.getElementById('admin-notes');
   els.writes = document.getElementById('admin-writes');
+  els.active = document.getElementById('admin-active');
+  els.usersChart = document.getElementById('admin-users-chart');
   els.powk = document.getElementById('admin-powk');
   els.readonlySpan = document.getElementById('admin-readonly');
   els.blocked = document.getElementById('admin-blocked');
@@ -259,14 +313,21 @@ export function initAdmin() {
 
   prefillLimits();
   refreshStats();
+  refreshUsers();
   setInterval(function() {
     if (document.visibilityState === 'visible') {
       refreshStats();
     }
   }, POLL_MS);
+  setInterval(function() {
+    if (document.visibilityState === 'visible') {
+      refreshUsers();
+    }
+  }, CHART_POLL_MS);
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       refreshStats();
+      refreshUsers();
     }
   });
 }

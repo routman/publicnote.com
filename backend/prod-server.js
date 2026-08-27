@@ -21,7 +21,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { PowController, ChallengeStore } from './lib/pow.js';
 import { Limits, loadLimitsConfig, watchLimitsFile, clientIp, deepMerge } from './lib/limits.js';
-import { isAllowedAdminIp, adminSourceIp, noteIdOf, rewriteLimitsFile, freeDiskKb } from './lib/admin.js';
+import { isAllowedAdminIp, adminSourceIp, noteIdOf, rewriteLimitsFile, freeDiskKb, userDaysWindow } from './lib/admin.js';
 
 const dbPath = process.env.DB_PATH || 'notes.db';
 if (!process.env.DB_PATH) {
@@ -71,6 +71,29 @@ const auditPruneStmt = db.prepare(
   'DELETE FROM audit_log WHERE id <= (SELECT COALESCE(MAX(id), 0) - 10000 FROM audit_log);'
 );
 
+// Daily user metrics (unique writer IPs + accepted writes per UTC day),
+// rolled up from the in-memory tracker by the 60 s sweeper.
+db.exec(
+  'CREATE TABLE IF NOT EXISTS user_days (' +
+    'date TEXT PRIMARY KEY NOT NULL, ' +
+    'unique_ips INTEGER NOT NULL DEFAULT 0, ' +
+    'writes INTEGER NOT NULL DEFAULT 0' +
+  ');'
+);
+const userDaysTodayStmt = db.prepare(
+  'SELECT unique_ips, writes FROM user_days WHERE date = ?;'
+);
+const userDaysUpsertStmt = db.prepare(
+  'INSERT INTO user_days (date, unique_ips, writes) VALUES (?, ?, ?) ' +
+    'ON CONFLICT(date) DO UPDATE SET unique_ips = excluded.unique_ips, writes = excluded.writes;'
+);
+const userDaysAllStmt = db.prepare(
+  'SELECT date, unique_ips, writes FROM user_days ORDER BY date DESC LIMIT ?;'
+);
+const userDaysPruneStmt = db.prepare(
+  "DELETE FROM user_days WHERE date < date('now', '-364 days');"
+);
+
 // Same record/tail interface as the mock's in-memory AuditRing.
 const audit = {
   record: function (entry) {
@@ -108,10 +131,39 @@ const challenges = new ChallengeStore(pow);
 
 const globalWrites = []; // accepted-write timestamps (60 s stat window)
 
+// Per-UTC-day user metrics tracker. The in-memory set/counter only covers
+// since the last restart, so the rollup takes the max of the DB row and the
+// tracker: a mid-day restart can never lose the day's count.
+function utcDayKey(now = Date.now()) {
+  return new Date(now).toISOString().slice(0, 10);
+}
+let userDayDate = utcDayKey();
+let userDayIps = new Set();
+let userDayWrites = 0;
+
+function recordUserDay(ip) {
+  const key = utcDayKey();
+  if (key !== userDayDate) {
+    userDayDate = key;
+    userDayIps = new Set();
+    userDayWrites = 0;
+  }
+  userDayIps.add(ip);
+  userDayWrites += 1;
+}
+
 const sweeper = setInterval(function () {
   challenges.sweep();
   limits.sweep();
   auditPruneStmt.run();
+  const todayKey = utcDayKey();
+  const todayRow = userDaysTodayStmt.get(todayKey);
+  userDaysUpsertStmt.run(
+    todayKey,
+    Math.max(todayRow ? todayRow.unique_ips : 0, userDayIps.size),
+    Math.max(todayRow ? todayRow.writes : 0, userDayWrites)
+  );
+  userDaysPruneStmt.run();
   const cutoff = Date.now() - 60000;
   while (globalWrites.length > 0 && globalWrites[0] < cutoff) {
     globalWrites.shift();
@@ -198,6 +250,7 @@ app.post('/api/save2', function (req, res) {
   limits.recordWrite(ip, id, now);
   pow.observe(now);
   globalWrites.push(now);
+  recordUserDay(ip);
   audit.record({ ip: ip, action: 'save', status: 200 });
   res.json({ body: 'successfully saved' });
 });
@@ -226,11 +279,31 @@ admin.post('/stats', function (req, res) {
     body: JSON.stringify({
       notes: countStmt.get().n,
       writes60s: writes60s,
+      activeIps: limits.byIp.size,
       powK: pow.kFor(),
       readonly: limits.cfg.readonly === true,
       blockedIps: Array.isArray(limits.cfg.blockedIps) ? limits.cfg.blockedIps : [],
       freeDiskKb: freeDiskKb(dirname(dbPath)),
       uptimeS: Math.floor(process.uptime())
+    })
+  });
+});
+
+admin.post('/user-days', function (req, res) {
+  const patch = req.body || {};
+  let days = 30;
+  if (typeof patch.days === 'number' && Number.isFinite(patch.days)) {
+    days = Math.max(1, Math.min(Math.floor(patch.days), 365));
+  }
+  const rows = userDaysAllStmt.all(days);
+  const byDate = new Map(rows.map(function (row) {
+    return [row.date, { uniqueIps: row.unique_ips, writes: row.writes }];
+  }));
+  res.json({
+    body: JSON.stringify({
+      days: userDaysWindow(function (key) {
+        return byDate.get(key);
+      }, days)
     })
   });
 });

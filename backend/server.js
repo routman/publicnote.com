@@ -11,7 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { PowController, ChallengeStore } from './lib/pow.js';
 import { Limits, loadLimitsConfig, watchLimitsFile, clientIp, deepMerge } from './lib/limits.js';
-import { isAllowedAdminIp, adminSourceIp, noteIdOf, AuditRing, rewriteLimitsFile, freeDiskKb } from './lib/admin.js';
+import { isAllowedAdminIp, adminSourceIp, noteIdOf, AuditRing, rewriteLimitsFile, freeDiskKb, userDaysWindow } from './lib/admin.js';
 
 // Build the express app. opts:
 //   enforcePow    - require a valid PoW proof on save2 (default true;
@@ -49,11 +49,32 @@ export function createApp(opts = {}) {
   const globalWrites = []; // accepted-write timestamps (60 s stat window)
   const audit = new AuditRing(opts.auditCap || 500);
 
+  // Per-UTC-day user metrics (unique writer IPs + accepted writes). In-memory
+  // here (the mock has no SQLite); prod persists the same shape to user_days.
+  const userDays = new Map(); // 'YYYY-MM-DD' -> { uniqueIps: Set, writes: number }
+  function recordUserDay(ip) {
+    const key = new Date().toISOString().slice(0, 10);
+    let row = userDays.get(key);
+    if (!row) {
+      row = { uniqueIps: new Set(), writes: 0 };
+      userDays.set(key, row);
+    }
+    row.uniqueIps.add(ip);
+    row.writes += 1;
+  }
+
   const sweeper = setInterval(function () {
     challenges.sweep();
     limits.sweep();
-    const cutoff = Date.now() - 60000;
-    while (globalWrites.length > 0 && globalWrites[0] < cutoff) {
+    const cutoff = new Date(Date.now() - 364 * 86400000).toISOString().slice(0, 10);
+    for (const key of userDays.keys()) {
+      if (key < cutoff) {
+        userDays.delete(key);
+      }
+    }
+    const now = Date.now();
+    const cutoff60 = now - 60000;
+    while (globalWrites.length > 0 && globalWrites[0] < cutoff60) {
       globalWrites.shift();
     }
   }, 60000);
@@ -142,6 +163,7 @@ export function createApp(opts = {}) {
     limits.recordWrite(ip, id, now);
     pow.observe(now);
     globalWrites.push(now);
+    recordUserDay(ip);
     audit.record({ ip: ip, action: 'save', status: 200 });
     if (typeof opts.onWrite === 'function') {
       opts.onWrite(notes);
@@ -173,6 +195,7 @@ export function createApp(opts = {}) {
       body: JSON.stringify({
         notes: notes.size,
         writes60s: writes60s,
+        activeIps: limits.byIp.size,
         powK: pow.kFor(),
         readonly: limits.cfg.readonly === true,
         blockedIps: Array.isArray(limits.cfg.blockedIps) ? limits.cfg.blockedIps : [],
@@ -257,9 +280,28 @@ export function createApp(opts = {}) {
     res.json({ body: JSON.stringify(audit.tail(n)) });
   });
 
+  admin.post('/user-days', function (req, res) {
+    const patch = req.body || {};
+    let days = 30;
+    if (typeof patch.days === 'number' && Number.isFinite(patch.days)) {
+      days = Math.max(1, Math.min(Math.floor(patch.days), 365));
+    }
+    const byDate = new Map();
+    for (const [key, row] of userDays) {
+      byDate.set(key, { uniqueIps: row.uniqueIps.size, writes: row.writes });
+    }
+    res.json({
+      body: JSON.stringify({
+        days: userDaysWindow(function (key) {
+          return byDate.get(key);
+        }, days)
+      })
+    });
+  });
+
   app.use('/api/admin', admin);
 
-  return { app, notes, limits, pow, challenges, audit, globalWrites };
+  return { app, notes, limits, pow, challenges, audit, globalWrites, userDays };
 }
 
 function argValue(flag) {
