@@ -12,6 +12,7 @@
     "test:pow": "node scripts/pow-limits.mjs",
     "test:admin": "node scripts/admin.mjs",
     "test:abuse": "node scripts/abuse-sim.mjs",
+    "test:attacker": "node scripts/attacker-sim.mjs",
     "test:solve": "node scripts/pow-solve.mjs"
   },
   "dependencies": {
