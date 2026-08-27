@@ -22,6 +22,10 @@ Titles are case-sensitive: `Example`, `example`, and `EXAMPLE` are different not
 
 Notes can be up to 100,000 characters (about 100 KB).
 
+## Proof of work
+
+To keep publicnote free and abuse-resistant, every save is gated by a small proof-of-work: your browser solves a short cryptographic puzzle before the note is accepted. It's trivial for a person but expensive for a bot, so spamming or overwriting notes at scale is impractical. The puzzle's difficulty adapts to how busy the service is.
+
 ## Public or private notes
 
 Notes can be public or private depending on the complexity of the title:
@@ -62,13 +66,13 @@ Your donations help fund operating costs and are greatly appreciated.
 
 ## Terms
 
-By using publicnote, you agree to the following:
+By using publicnote (the "Service"), you agree to be bound by the following terms and conditions ("Terms of Use") set forth by publicnote.com ("We").
 
-1. We are not responsible for any information stored with the service.
-2. We reserve the right to modify or terminate the service for any reason, without notice at any time.
-3. We reserve the right to alter these terms at any time.
-4. We reserve the right to refuse service to anyone for any reason at any time.
-5. Woof woof woof woof woof.
+1. We are not responsible for any information stored with the Service.
+2. You may not use the Service for content that is illegal, or that is harassing, threatening, hateful, defamatory, or otherwise abusive. We may remove such content and/or terminate access at our discretion.
+3. We reserve the right to modify or terminate the Service for any reason, without notice at any time.
+4. We reserve the right to alter these terms at any time.
+5. We reserve the right to refuse service to anyone for any reason at any time.
 
 ## FAQ
 
