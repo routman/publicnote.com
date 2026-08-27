@@ -8,11 +8,15 @@
 publicnote.com {
 	encode gzip
 
-	# Hide the server token, add basic hardening headers on every response.
+	# Hide the server token, add hardening headers on every response.
 	header {
 		-Server
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000"
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 	}
 
 	# Admin tooling (phase 6): CIDR-gated at the edge AND by the backend.
@@ -55,10 +59,14 @@ pubilcnote-aws.taild9a60e.ts.net, pubilcnote-aws {
 	tls internal
 	encode gzip
 
+	# Same hardening as the public block, minus HSTS (self-signed internal cert).
 	header {
 		-Server
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 	}
 
 	@adminDeny not remote_ip 127.0.0.1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
