@@ -39,6 +39,14 @@ Using common words as the title is for entertainment purposes only. You will fin
 
 **Do not use publicnote to store sensitive information.**
 
+## Picking a strong title
+
+The title is the only thing that protects a private note — its unguessability is the security, not the encryption. A note is only as private as its title is hard to guess.
+
+- Use a long, random title: a passphrase of several unrelated words, or a random string of 16+ characters.
+- Avoid dictionary words, names, dates, and anything you've used elsewhere.
+- A guessable title means anyone who tries it can find, read, and edit the note.
+
 ## Use cases
 
 - Share ideas publicly
