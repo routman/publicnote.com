@@ -1,0 +1,7 @@
+[Unit]
+Description=publicnote.com daily notes.db backup (7-day retention)
+
+[Service]
+Type=oneshot
+User=publicnote
+ExecStart=/opt/publicnote/bin/backup-notes.sh
