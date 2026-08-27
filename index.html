@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
   <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300&display=swap" rel="stylesheet">
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width">
@@ -56,7 +52,7 @@
     </noscript>
     <div id="app">
       <input id="title-input" type="password" placeholder="title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <div id="eye-open" class="eye icon" style="display: none"></div>
+      <div id="eye-open" class="eye icon" hidden></div>
       <div id="eye-closed" class="closedeye icon"></div>
       <div id="status">
         <div id="spinner"></div>
@@ -72,7 +68,7 @@
         <h1>Enter any title above</h1>
         <p><a class="link" href="https://github.com/routman/publicnote.com" target="_blank" rel="noopener">about</a> · <span class="link" data-goto="terms">terms</span> · <span class="link" data-goto="privacy">privacy</span></p>
       </div>
-      <div class="page terms" style="display: none">
+      <div class="page terms" hidden>
         <div>
           <div class="logo accent">public</div><div class="logo">note&nbsp;</div>
         </div>
@@ -94,7 +90,7 @@
         <div class="link" data-goto="">home</div>
         <br><br>
       </div>
-      <div class="page suicide" style="display: none">
+      <div class="page suicide" hidden>
         <div>
           <div class="logo accent">public</div><div class="logo">note&nbsp;</div>
         </div>
@@ -394,7 +390,7 @@
         <div class="link" data-goto="">home</div>
         <br><br>
     </div>
-    <div class="page privacy" style="display: none">
+    <div class="page privacy" hidden>
       <div>
         <div class="logo accent">public</div><div class="logo">note&nbsp;</div>
       </div>
@@ -410,7 +406,7 @@
       <div class="link" data-goto="">home</div>
       <br><br>
     </div>
-    <div class="page about" style="display: none">
+    <div class="page about" hidden>
         <div>
           <div class="logo accent">public</div><div class="logo">note&nbsp;</div>
         </div>
@@ -441,7 +437,7 @@
         <br>
         <div class="link" data-goto="">home</div><br><br>
       </div>
-      <div class="page admin" style="display: none">
+      <div class="page admin" hidden>
         <div>
           <div class="logo accent">public</div><div class="logo">note&nbsp;admin</div>
         </div>
@@ -553,7 +549,7 @@
           <div id="admin-audit"></div>
         </div>
       </div>
-      <textarea id="note" placeholder="type note here" style="display: none"></textarea>
+      <textarea id="note" placeholder="type note here" hidden></textarea>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

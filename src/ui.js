@@ -11,28 +11,28 @@ const els = {};
 function renderStatus() {
   const s = state.status;
   const ahead = state.serverAhead;
-  els.spinner.style.display = s == 'busy' ? '' : 'none';
-  els.checkmark.style.display = s == 'ok' && !statusHover && !ahead ? '' : 'none';
-  els.exclaim.style.display = s == 'ok' && !statusHover && ahead ? '' : 'none';
-  els.refresh.style.display = s == 'error' || (s == 'ok' && statusHover) ? '' : 'none';
-  els.close.style.display = s == 'error' && !statusHover ? '' : 'none';
+  els.spinner.hidden = s != 'busy';
+  els.checkmark.hidden = !(s == 'ok' && !statusHover && !ahead);
+  els.exclaim.hidden = !(s == 'ok' && !statusHover && ahead);
+  els.refresh.hidden = !(s == 'error' || (s == 'ok' && statusHover));
+  els.close.hidden = !(s == 'error' && !statusHover);
 }
 
 function renderContent() {
   const t = state.title;
   const lower = t.toLowerCase();
   const admin = adminActive();
-  els.home.style.display = admin ? 'none' : t == '' ? '' : 'none';
-  els.terms.style.display = admin ? 'none' : t == 'terms' ? '' : 'none';
-  els.suicide.style.display = admin ? 'none' : lower == 'suicide' ? '' : 'none';
-  els.about.style.display = admin ? 'none' : t == 'about' ? '' : 'none';
-  els.privacy.style.display = admin ? 'none' : t == 'privacy' ? '' : 'none';
-  els.note.style.display = admin ? 'none' : isNoteTitle(t) ? '' : 'none';
-  els.admin.style.display = admin ? '' : 'none';
-  els.title.style.display = admin ? 'none' : '';
-  els.status.style.display = admin ? 'none' : '';
-  els.eyeOpen.style.display = admin ? 'none' : els.title.type === 'text' ? '' : 'none';
-  els.eyeClosed.style.display = admin ? 'none' : els.title.type === 'text' ? 'none' : '';
+  els.home.hidden = admin || t != '';
+  els.terms.hidden = admin || t != 'terms';
+  els.suicide.hidden = admin || lower != 'suicide';
+  els.about.hidden = admin || t != 'about';
+  els.privacy.hidden = admin || t != 'privacy';
+  els.note.hidden = admin || !isNoteTitle(t);
+  els.admin.hidden = !admin;
+  els.title.hidden = admin;
+  els.status.hidden = admin;
+  els.eyeOpen.hidden = admin || els.title.type !== 'text';
+  els.eyeClosed.hidden = admin || els.title.type === 'text';
 }
 
 function syncEditor() {
@@ -50,8 +50,8 @@ function navigate(title) {
 }
 
 function setEye(hidden) {
-  els.eyeOpen.style.display = hidden ? 'none' : '';
-  els.eyeClosed.style.display = hidden ? '' : 'none';
+  els.eyeOpen.hidden = hidden;
+  els.eyeClosed.hidden = !hidden;
   els.title.type = hidden ? 'password' : 'text';
 }
 
