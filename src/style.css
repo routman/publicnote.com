@@ -605,6 +605,21 @@ a {
 .users-chart {
   width: 100%;
   display: block;
+  position: relative;
+}
+
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  background: #1e1b1e;
+  border: 1px solid #4a454a;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--color-text);
+  white-space: nowrap;
+  z-index: 1;
 }
 
 .users-chart rect {

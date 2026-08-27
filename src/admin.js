@@ -151,7 +151,30 @@ function renderUsersChart(rows) {
     parts.push('<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + (r.uniqueIps > 0 ? Math.max(barH, 2) : 0) + '" class="' + cls + '"><title>' + tip + '</title></rect>');
   }
   parts.push('</svg>');
-  els.usersChart.innerHTML = parts.join('');
+  els.usersChart.innerHTML = parts.join('') + '<div class="chart-tip" hidden></div>';
+}
+
+function showChartTip(rect, text) {
+  const tip = els.usersChart.querySelector('.chart-tip');
+  if (!tip) {
+    return;
+  }
+  const c = els.usersChart.getBoundingClientRect();
+  const b = rect.getBoundingClientRect();
+  tip.textContent = text;
+  tip.hidden = false;
+  const half = tip.offsetWidth / 2;
+  let left = b.left - c.left + b.width / 2;
+  left = Math.max(half, Math.min(c.width - half, left));
+  tip.style.left = left + 'px';
+  tip.style.top = b.top - c.top + 'px';
+}
+
+function hideChartTip() {
+  const tip = els.usersChart.querySelector('.chart-tip');
+  if (tip) {
+    tip.hidden = true;
+  }
 }
 
 async function refreshUsers() {
@@ -293,6 +316,23 @@ export function initAdmin() {
   els.limitNote = document.getElementById('admin-limit-note');
   els.limitCt = document.getElementById('admin-limit-ct');
 
+  els.usersChart.addEventListener('pointerover', function(e) {
+    const rect = e.target;
+    if (rect.tagName !== 'rect') {
+      return;
+    }
+    const title = rect.querySelector('title');
+    if (!title) {
+      return;
+    }
+    showChartTip(rect, title.textContent);
+  });
+  els.usersChart.addEventListener('pointerout', function(e) {
+    if (e.target.tagName === 'rect') {
+      hideChartTip();
+    }
+  });
+  els.usersChart.addEventListener('pointerleave', hideChartTip);
   els.toggle.addEventListener('change', function() {
     toggleReadonly();
   });
