@@ -55,7 +55,7 @@ publicnote.com {
 # Self-signed (internal) cert -> one-time browser warning. Mirrors the
 # publicnote.com block (CIDR admin gate + static SPA + API proxy) so the
 # admin panel and notes app both work over the tailnet.
-pubilcnote-aws.taild9a60e.ts.net, pubilcnote-aws {
+publicnote-aws.taild9a60e.ts.net, publicnote-aws {
 	tls internal
 	encode gzip
 
