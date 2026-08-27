@@ -55,7 +55,11 @@ publicnote.com {
 # Self-signed (internal) cert -> one-time browser warning. Mirrors the
 # publicnote.com block (CIDR admin gate + static SPA + API proxy) so the
 # admin panel and notes app both work over the tailnet.
-publicnote-aws.taild9a60e.ts.net, publicnote-aws {
+# NOTE: the tailnet machine is actually named "pubilcnote-aws" (typo baked
+# into the machine name), so the magic-DNS name carries it too. Both the
+# real name and the corrected spelling are listed; if the machine is ever
+# renamed, drop the stale entry.
+pubilcnote-aws.taild9a60e.ts.net, publicnote-aws.taild9a60e.ts.net, pubilcnote-aws, publicnote-aws {
 	tls internal
 	encode gzip
 
