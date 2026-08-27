@@ -191,10 +191,14 @@ export function createApp(opts = {}) {
     const writes60s = globalWrites.filter(function (t) {
       return t >= now - 60000;
     }).length;
+    const writes30m = globalWrites.filter(function (t) {
+      return t >= now - 1800000;
+    }).length;
     res.json({
       body: JSON.stringify({
         notes: notes.size,
         writes60s: writes60s,
+        writes30m: writes30m,
         activeIps: limits.byIp.size,
         powK: pow.kFor(),
         readonly: limits.cfg.readonly === true,

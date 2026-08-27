@@ -359,6 +359,7 @@ async function main() {
       const s = bodyOf(result);
       assert.equal(typeof s.notes, 'number');
       assert.equal(typeof s.writes60s, 'number');
+      assert.equal(typeof s.writes30m, 'number');
       assert.equal(typeof s.activeIps, 'number');
       assert.equal(typeof s.powK, 'number');
       assert.equal(typeof s.readonly, 'boolean');
@@ -381,6 +382,23 @@ async function main() {
       await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' }); // same ip again
 
       assert.equal(bodyOf(await post(app, '/api/admin/stats')).activeIps, 2);
+    } finally {
+      await app.stop();
+    }
+  });
+
+  await test('stats: writes30m counts accepted saves in the last 30 minutes', async function () {
+    const app = await startApp({ enforcePow: false });
+    try {
+      assert.equal(bodyOf(await post(app, '/api/admin/stats')).writes30m, 0);
+
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' });
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.8' });
+      await post(app, '/api/save2', { id: 'n', ct: 'c' }, { 'X-Forwarded-For': '203.0.113.7' });
+
+      const s = bodyOf(await post(app, '/api/admin/stats'));
+      assert.equal(s.writes30m, 3);
+      assert.equal(s.writes60s, 3);
     } finally {
       await app.stop();
     }

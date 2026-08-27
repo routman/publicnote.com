@@ -105,6 +105,7 @@ async function refreshStats() {
   const s = r.data;
   els.notes.textContent = String(s.notes);
   els.writes.textContent = String(s.writes60s);
+  els.writes30m.textContent = s.writes30m === undefined ? '-' : String(s.writes30m);
   els.active.textContent = s.activeIps === undefined ? '-' : String(s.activeIps);
   els.powk.textContent = String(s.powK);
   els.readonlySpan.textContent = s.readonly === true ? 'ON' : 'off';
@@ -275,6 +276,7 @@ export function initAdmin() {
   els.error = document.getElementById('admin-error');
   els.notes = document.getElementById('admin-notes');
   els.writes = document.getElementById('admin-writes');
+  els.writes30m = document.getElementById('admin-writes30m');
   els.active = document.getElementById('admin-active');
   els.usersChart = document.getElementById('admin-users-chart');
   els.powk = document.getElementById('admin-powk');
