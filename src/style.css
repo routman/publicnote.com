@@ -407,6 +407,10 @@ a {
   display: inline;
 }
 
+.home p .link {
+  margin-bottom: 20px;
+}
+
 .home li {
   margin-bottom: 8px;
 }
